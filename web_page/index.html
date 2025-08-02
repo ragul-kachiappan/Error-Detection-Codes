@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Detection & Correction Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #888;
+            font-weight: 300;
+        }
+
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .algorithm-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff6b6b;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.2);
+        }
+
+        .algorithm-card.active {
+            border-color: #4ecdc4;
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+        }
+
+        .algorithm-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #ff6b6b;
+        }
+
+        .algorithm-card p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .implementation-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .implementation-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4ecdc4;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .output-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .output-section h4 {
+            color: #4ecdc4;
+            margin-bottom: 1rem;
+        }
+
+        .output-item {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .output-item strong {
+            color: #ff6b6b;
+        }
+
+        .binary-display {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            word-break: break-all;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 0.75rem;
+            border-radius: 6px;
+            border-left: 4px solid #ff6b6b;
+            margin-top: 1rem;
+        }
+
+        .success-message {
+            color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+            padding: 0.75rem;
+            border-radius: 6px;
+            border-left: 4px solid #4ecdc4;
+            margin-top: 1rem;
+        }
+
+        .data-blocks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .data-block {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .algorithm-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Error Detection & Correction</h1>
+            <p>Advanced bit-level implementations of error detection algorithms</p>
+        </div>
+
+        <div class="algorithm-grid">
+            <div class="algorithm-card" data-algorithm="checksum">
+                <h3>Checksum</h3>
+                <p>Internet checksum with carry wraparound for robust error detection in network protocols</p>
+            </div>
+            <div class="algorithm-card" data-algorithm="vrc">
+                <h3>VRC (Parity)</h3>
+                <p>Vertical Redundancy Check using even parity bits for single-bit error detection</p>
+            </div>
+            <div class="algorithm-card" data-algorithm="lrc">
+                <h3>LRC</h3>
+                <p>Longitudinal Redundancy Check with column-wise parity for enhanced error detection</p>
+            </div>
+            <div class="algorithm-card" data-algorithm="crc">
+                <h3>CRC</h3>
+                <p>Cyclic Redundancy Check using polynomial division for advanced error detection</p>
+            </div>
+        </div>
+
+        <!-- Checksum Implementation -->
+        <div id="checksum-panel" class="implementation-panel">
+            <h2>Internet Checksum Implementation</h2>
+            <div class="input-group">
+                <label>Number of Blocks:</label>
+                <input type="number" id="checksum-blocks" min="2" max="10" value="3">
+            </div>
+            <div class="input-group">
+                <label>Block Size (bits):</label>
+                <input type="number" id="checksum-size" min="4" max="16" value="8">
+            </div>
+            <div id="checksum-data-inputs"></div>
+            <button class="btn" onclick="generateChecksumInputs()">Generate Data Inputs</button>
+            <button class="btn" onclick="calculateChecksum()">Calculate Checksum</button>
+            <div id="checksum-output"></div>
+        </div>
+
+        <!-- VRC Implementation -->
+        <div id="vrc-panel" class="implementation-panel">
+            <h2>Vertical Redundancy Check (Parity)</h2>
+            <div class="input-group">
+                <label>Number of Blocks:</label>
+                <input type="number" id="vrc-blocks" min="1" max="10" value="3">
+            </div>
+            <div class="input-group">
+                <label>Block Size (bits):</label>
+                <input type="number" id="vrc-size" min="4" max="16" value="7">
+            </div>
+            <div id="vrc-data-inputs"></div>
+            <button class="btn" onclick="generateVRCInputs()">Generate Data Inputs</button>
+            <button class="btn" onclick="calculateVRC()">Calculate VRC</button>
+            <div id="vrc-output"></div>
+        </div>
+
+        <!-- LRC Implementation -->
+        <div id="lrc-panel" class="implementation-panel">
+            <h2>Longitudinal Redundancy Check</h2>
+            <div class="input-group">
+                <label>Number of Blocks:</label>
+                <input type="number" id="lrc-blocks" min="2" max="10" value="3">
+            </div>
+            <div class="input-group">
+                <label>Block Size (bits):</label>
+                <input type="number" id="lrc-size" min="4" max="16" value="8">
+            </div>
+            <div id="lrc-data-inputs"></div>
+            <button class="btn" onclick="generateLRCInputs()">Generate Data Inputs</button>
+            <button class="btn" onclick="calculateLRC()">Calculate LRC</button>
+            <div id="lrc-output"></div>
+        </div>
+
+        <!-- CRC Implementation -->
+        <div id="crc-panel" class="implementation-panel">
+            <h2>Cyclic Redundancy Check</h2>
+            <div class="input-group">
+                <label>Data Word (binary):</label>
+                <input type="text" id="crc-data" placeholder="1101101" pattern="[01]+">
+            </div>
+            <div class="input-group">
+                <label>Generator Polynomial (binary):</label>
+                <input type="text" id="crc-key" placeholder="1011" pattern="[01]+">
+            </div>
+            <button class="btn" onclick="calculateCRC()">Calculate CRC</button>
+            <div class="input-group">
+                <label>Received Codeword (for verification):</label>
+                <input type="text" id="crc-received" placeholder="Enter received codeword" pattern="[01]+">
+            </div>
+            <button class="btn btn-secondary" onclick="verifyCRC()">Verify Received Data</button>
+            <div id="crc-output"></div>
+        </div>
+
+        <div class="footer">
+            <p>Implemented with hardware-inspired bit manipulation techniques</p>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentAlgorithm = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click listeners to algorithm cards
+            document.querySelectorAll('.algorithm-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    selectAlgorithm(this.dataset.algorithm);
+                });
+            });
+        });
+
+        function selectAlgorithm(algorithm) {
+            // Clear previous selections
+            document.querySelectorAll('.algorithm-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelectorAll('.implementation-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Set new selection
+            document.querySelector(`[data-algorithm="${algorithm}"]`).classList.add('active');
+            document.getElementById(`${algorithm}-panel`).classList.add('active');
+            currentAlgorithm = algorithm;
+        }
+
+        // Utility functions
+        function parseBinaryInput(input) {
+            return input.replace(/\s+/g, '').split('').map(bit => parseInt(bit));
+        }
+
+        function validateBinaryInput(input, maxLength = null) {
+            const cleaned = input.replace(/\s+/g, '');
+            if (!/^[01]+$/.test(cleaned)) {
+                throw new Error('Input must contain only 0s and 1s');
+            }
+            if (maxLength && cleaned.length > maxLength) {
+                throw new Error(`Input must be ${maxLength} bits or less`);
+            }
+            return cleaned;
+        }
+
+        function displayOutput(elementId, content) {
+            document.getElementById(elementId).innerHTML = content;
+        }
+
+        function createErrorMessage(message) {
+            return `<div class="error-message">${message}</div>`;
+        }
+
+        function createSuccessMessage(message) {
+            return `<div class="success-message">${message}</div>`;
+        }
+
+        // CHECKSUM IMPLEMENTATION
+        function generateChecksumInputs() {
+            const blocks = parseInt(document.getElementById('checksum-blocks').value);
+            const size = parseInt(document.getElementById('checksum-size').value);
+            
+            if (blocks < 2 || blocks > 10 || size < 4 || size > 16) {
+                displayOutput('checksum-output', createErrorMessage('Invalid parameters. Blocks: 2-10, Size: 4-16 bits'));
+                return;
+            }
+
+            let html = '<h4>Enter Data Blocks:</h4>';
+            for (let i = 0; i < blocks; i++) {
+                html += `
+                    <div class="input-group">
+                        <label>Block ${i + 1} (${size} bits):</label>
+                        <input type="text" id="checksum-block-${i}" placeholder="${'0'.repeat(size)}" maxlength="${size}" pattern="[01]{${size}}">
+                    </div>
+                `;
+            }
+            document.getElementById('checksum-data-inputs').innerHTML = html;
+        }
+
+        function calculateChecksum() {
+            try {
+                const blocks = parseInt(document.getElementById('checksum-blocks').value);
+                const size = parseInt(document.getElementById('checksum-size').value);
+                
+                // Get and validate input data
+                const dataBlocks = [];
+                for (let i = 0; i < blocks; i++) {
+                    const input = document.getElementById(`checksum-block-${i}`).value;
+                    if (!input) {
+                        throw new Error(`Block ${i + 1} is empty`);
+                    }
+                    validateBinaryInput(input, size);
+                    if (input.length !== size) {
+                        throw new Error(`Block ${i + 1} must be exactly ${size} bits`);
+                    }
+                    dataBlocks.push(parseBinaryInput(input));
+                }
+
+                // Calculate checksum using the same logic as original C code
+                let sum = new Array(size).fill(0);
+                let carry = 0;
+
+                // Add all blocks
+                for (let i = 0; i < blocks - 1; i++) {
+                    if (i === 0) {
+                        // First addition
+                        for (let j = size - 1; j >= 0; j--) {
+                            sum[j] = dataBlocks[i][j] ^ dataBlocks[i + 1][j] ^ carry;
+                            carry = (dataBlocks[i][j] & dataBlocks[i + 1][j]) | 
+                                   (dataBlocks[i + 1][j] & carry) | 
+                                   (carry & dataBlocks[i][j]);
+                        }
+                    } else {
+                        // Subsequent additions
+                        for (let j = size - 1; j >= 0; j--) {
+                            const prevSum = sum[j];
+                            sum[j] = sum[j] ^ dataBlocks[i + 1][j] ^ carry;
+                            carry = (prevSum & dataBlocks[i + 1][j]) | 
+                                   (dataBlocks[i + 1][j] & carry) | 
+                                   (carry & prevSum);
+                        }
+                    }
+
+                    // Handle wraparound carry
+                    if (carry === 1) {
+                        carry = 0;
+                        const temp = new Array(size).fill(0);
+                        temp[size - 1] = 1;
+
+                        for (let j = size - 1; j >= 0; j--) {
+                            const prevSum = sum[j];
+                            sum[j] = sum[j] ^ temp[j] ^ carry;
+                            carry = (prevSum & temp[j]) | (temp[j] & carry) | (carry & prevSum);
+                        }
+                    }
+                }
+
+                // Take one's complement
+                const checksum = sum.map(bit => bit === 0 ? 1 : 0);
+
+                // Display results
+                let output = '<div class="output-section"><h4>Checksum Results</h4>';
+                
+                // Show input data
+                output += '<div class="output-item"><strong>Input Data Blocks:</strong><div class="data-blocks">';
+                dataBlocks.forEach((block, i) => {
+                    output += `<div class="data-block">Block ${i + 1}: ${block.join('')}</div>`;
+                });
+                output += '</div></div>';
+
+                // Show checksum
+                output += `<div class="output-item"><strong>Calculated Checksum:</strong> <span class="binary-display">${checksum.join('')}</span></div>`;
+
+                // Show transmitted data
+                output += '<div class="output-item"><strong>Data to Transmit:</strong><div class="data-blocks">';
+                dataBlocks.forEach((block, i) => {
+                    output += `<div class="data-block">${block.join('')}</div>`;
+                });
+                output += `<div class="data-block" style="border: 2px solid #4ecdc4;">${checksum.join('')}</div>`;
+                output += '</div></div>';
+
+                output += createSuccessMessage('Checksum calculated successfully! Include the checksum block when transmitting.');
+                output += '</div>';
+
+                displayOutput('checksum-output', output);
+
+            } catch (error) {
+                displayOutput('checksum-output', createErrorMessage(error.message));
+            }
+        }
+
+        // VRC IMPLEMENTATION
+        function generateVRCInputs() {
+            const blocks = parseInt(document.getElementById('vrc-blocks').value);
+            const size = parseInt(document.getElementById('vrc-size').value);
+            
+            if (blocks < 1 || blocks > 10 || size < 4 || size > 16) {
+                displayOutput('vrc-output', createErrorMessage('Invalid parameters. Blocks: 1-10, Size: 4-16 bits'));
+                return;
+            }
+
+            let html = '<h4>Enter Data Blocks:</h4>';
+            for (let i = 0; i < blocks; i++) {
+                html += `
+                    <div class="input-group">
+                        <label>Block ${i + 1} (${size} bits):</label>
+                        <input type="text" id="vrc-block-${i}" placeholder="${'0'.repeat(size)}" maxlength="${size}" pattern="[01]{${size}}">
+                    </div>
+                `;
+            }
+            document.getElementById('vrc-data-inputs').innerHTML = html;
+        }
+
+        function calculateVRC() {
+            try {
+                const blocks = parseInt(document.getElementById('vrc-blocks').value);
+                const size = parseInt(document.getElementById('vrc-size').value);
+                
+                // Get and validate input data
+                const dataBlocks = [];
+                for (let i = 0; i < blocks; i++) {
+                    const input = document.getElementById(`vrc-block-${i}`).value;
+                    if (!input) {
+                        throw new Error(`Block ${i + 1} is empty`);
+                    }
+                    validateBinaryInput(input, size);
+                    if (input.length !== size) {
+                        throw new Error(`Block ${i + 1} must be exactly ${size} bits`);
+                    }
+                    dataBlocks.push(parseBinaryInput(input));
+                }
+
+                // Calculate parity for each block
+                const parityBits = [];
+                const transmitBlocks = [];
+
+                for (let i = 0; i < blocks; i++) {
+                    let parity = 0;
+                    for (let j = 0; j < size; j++) {
+                        parity ^= dataBlocks[i][j];
+                    }
+                    parityBits.push(parity);
+                    transmitBlocks.push([...dataBlocks[i], parity]);
+                }
+
+                // Display results
+                let output = '<div class="output-section"><h4>VRC Results</h4>';
+                
+                // Show input data
+                output += '<div class="output-item"><strong>Original Data Blocks:</strong><div class="data-blocks">';
+                dataBlocks.forEach((block, i) => {
+                    output += `<div class="data-block">Block ${i + 1}: ${block.join('')}</div>`;
+                });
+                output += '</div></div>';
+
+                // Show parity bits
+                output += `<div class="output-item"><strong>Calculated Parity Bits:</strong> <span class="binary-display">${parityBits.join(' ')}</span></div>`;
+
+                // Show transmitted data with parity
+                output += '<div class="output-item"><strong>Data with Parity Bits:</strong><div class="data-blocks">';
+                transmitBlocks.forEach((block, i) => {
+                    const datapart = block.slice(0, -1).join('');
+                    const paritypart = block[block.length - 1];
+                    output += `<div class="data-block">${datapart}<span style="color: #4ecdc4;">${paritypart}</span></div>`;
+                });
+                output += '</div></div>';
+
+                output += createSuccessMessage('VRC parity bits calculated successfully!');
+                output += '</div>';
+
+                displayOutput('vrc-output', output);
+
+            } catch (error) {
+                displayOutput('vrc-output', createErrorMessage(error.message));
+            }
+        }
+
+        // LRC IMPLEMENTATION
+        function generateLRCInputs() {
+            const blocks = parseInt(document.getElementById('lrc-blocks').value);
+            const size = parseInt(document.getElementById('lrc-size').value);
+            
+            if (blocks < 2 || blocks > 10 || size < 4 || size > 16) {
+                displayOutput('lrc-output', createErrorMessage('Invalid parameters. Blocks: 2-10, Size: 4-16 bits'));
+                return;
+            }
+
+            let html = '<h4>Enter Data Blocks:</h4>';
+            for (let i = 0; i < blocks; i++) {
+                html += `
+                    <div class="input-group">
+                        <label>Block ${i + 1} (${size} bits):</label>
+                        <input type="text" id="lrc-block-${i}" placeholder="${'0'.repeat(size)}" maxlength="${size}" pattern="[01]{${size}}">
+                    </div>
+                `;
+            }
+            document.getElementById('lrc-data-inputs').innerHTML = html;
+        }
+
+        function calculateLRC() {
+            try {
+                const blocks = parseInt(document.getElementById('lrc-blocks').value);
+                const size = parseInt(document.getElementById('lrc-size').value);
+                
+                // Get and validate input data
+                const dataBlocks = [];
+                for (let i = 0; i < blocks; i++) {
+                    const input = document.getElementById(`lrc-block-${i}`).value;
+                    if (!input) {
+                        throw new Error(`Block ${i + 1} is empty`);
+                    }
+                    validateBinaryInput(input, size);
+                    if (input.length !== size) {
+                        throw new Error(`Block ${i + 1} must be exactly ${size} bits`);
+                    }
+                    dataBlocks.push(parseBinaryInput(input));
+                }
+
+                // Calculate LRC (column-wise XOR)
+                const lrc = new Array(size).fill(0);
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < blocks; j++) {
+                        lrc[i] ^= dataBlocks[j][i];
+                    }
+                }
+
+                // Display results
+                let output = '<div class="output-section"><h4>LRC Results</h4>';
+                
+                // Show input data
+                output += '<div class="output-item"><strong>Input Data Blocks:</strong><div class="data-blocks">';
+                dataBlocks.forEach((block, i) => {
+                    output += `<div class="data-block">Block ${i + 1}: ${block.join('')}</div>`;
+                });
+                output += '</div></div>';
+
+                // Show LRC calculation
+                output += `<div class="output-item"><strong>Calculated LRC Block:</strong> <span class="binary-display">${lrc.join('')}</span></div>`;
+
+                // Show transmitted data
+                output += '<div class="output-item"><strong>Data to Transmit:</strong><div class="data-blocks">';
+                dataBlocks.forEach((block, i) => {
+                    output += `<div class="data-block">${block.join('')}</div>`;
+                });
+                output += `<div class="data-block" style="border: 2px solid #4ecdc4;">${lrc.join('')}</div>`;
+                output += '</div></div>';
+
+                output += createSuccessMessage('LRC calculated successfully! Include the LRC block when transmitting.');
+                output += '</div>';
+
+                displayOutput('lrc-output', output);
+
+            } catch (error) {
+                displayOutput('lrc-output', createErrorMessage(error.message));
+            }
+        }
+
+        // CRC IMPLEMENTATION
+        function calculateCRC() {
+            try {
+                const dataInput = document.getElementById('crc-data').value.trim();
+                const keyInput = document.getElementById('crc-key').value.trim();
+
+                if (!dataInput || !keyInput) {
+                    throw new Error('Both data word and generator polynomial are required');
+                }
+
+                const dataWord = parseBinaryInput(validateBinaryInput(dataInput));
+                const key = parseBinaryInput(validateBinaryInput(keyInput));
+
+                if (key.length < 2) {
+                    throw new Error('Generator polynomial must be at least 2 bits long');
+                }
+
+                // Create codeword (data + zeros for remainder)
+                const codeWord = [...dataWord, ...new Array(key.length - 1).fill(0)];
+                const dsize = dataWord.length;
+                const ksize = key.length;
+
+                // Perform polynomial division
+                let temp = new Array(ksize);
+                const quotient = new Array(dsize);
+
+                for (let i = 0; i < dsize; i++) {
+                    if (i === 0) {
+                        // First iteration
+                        if (codeWord[i] === 0) {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = codeWord[j] ^ 0;
+                            }
+                            quotient[i] = 0;
+                        } else {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = codeWord[j] ^ key[j];
+                            }
+                            quotient[i] = 1;
+                        }
+                    } else {
+                        // Shift and bring down next bit
+                        for (let k = 0; k < ksize - 1; k++) {
+                            temp[k] = temp[k + 1];
+                        }
+                        temp[ksize - 1] = codeWord[i + ksize - 1];
+
+                        // Perform XOR if MSB is 1
+                        if (temp[0] === 0) {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = temp[j] ^ 0;
+                            }
+                            quotient[i] = 0;
+                        } else {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = temp[j] ^ key[j];
+                            }
+                            quotient[i] = 1;
+                        }
+                    }
+                }
+
+                // Extract remainder
+                const remainder = temp.slice(1);
+
+                // Create final codeword
+                const finalCodeword = [...dataWord, ...remainder];
+
+                // Display results
+                let output = '<div class="output-section"><h4>CRC Results</h4>';
+                
+                output += `<div class="output-item"><strong>Data Word:</strong> <span class="binary-display">${dataWord.join('')}</span></div>`;
+                output += `<div class="output-item"><strong>Generator Polynomial:</strong> <span class="binary-display">${key.join('')}</span></div>`;
+                output += `<div class="output-item"><strong>Quotient:</strong> <span class="binary-display">${quotient.join('')}</span></div>`;
+                output += `<div class="output-item"><strong>CRC Remainder:</strong> <span class="binary-display">${remainder.join('')}</span></div>`;
+                output += `<div class="output-item"><strong>Final Codeword:</strong> <span class="binary-display">${finalCodeword.join('')}</span></div>`;
+
+                // Auto-fill the received codeword field
+                document.getElementById('crc-received').value = finalCodeword.join('');
+
+                output += createSuccessMessage('CRC calculated successfully! The codeword has been copied to the verification field.');
+                output += '</div>';
+
+                displayOutput('crc-output', output);
+
+            } catch (error) {
+                displayOutput('crc-output', createErrorMessage(error.message));
+            }
+        }
+
+        function verifyCRC() {
+            try {
+                const keyInput = document.getElementById('crc-key').value.trim();
+                const receivedInput = document.getElementById('crc-received').value.trim();
+
+                if (!keyInput || !receivedInput) {
+                    throw new Error('Both generator polynomial and received codeword are required');
+                }
+
+                const key = parseBinaryInput(validateBinaryInput(keyInput));
+                const receivedCodeword = parseBinaryInput(validateBinaryInput(receivedInput));
+
+                if (key.length < 2) {
+                    throw new Error('Generator polynomial must be at least 2 bits long');
+                }
+
+                if (receivedCodeword.length < key.length) {
+                    throw new Error('Received codeword must be longer than generator polynomial');
+                }
+
+                const ksize = key.length;
+                const dsize = receivedCodeword.length - ksize + 1;
+
+                // Perform polynomial division on received data
+                let temp = new Array(ksize);
+
+                for (let i = 0; i < dsize; i++) {
+                    if (i === 0) {
+                        if (receivedCodeword[i] === 0) {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = receivedCodeword[j] ^ 0;
+                            }
+                        } else {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = receivedCodeword[j] ^ key[j];
+                            }
+                        }
+                    } else {
+                        for (let k = 0; k < ksize - 1; k++) {
+                            temp[k] = temp[k + 1];
+                        }
+                        temp[ksize - 1] = receivedCodeword[i + ksize - 1];
+
+                        if (temp[0] === 0) {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = temp[j] ^ 0;
+                            }
+                        } else {
+                            for (let j = 0; j < ksize; j++) {
+                                temp[j] = temp[j] ^ key[j];
+                            }
+                        }
+                    }
+                }
+
+                const verificationRemainder = temp.slice(1);
+                const hasError = verificationRemainder.some(bit => bit !== 0);
+
+                // Display verification results
+                let output = document.getElementById('crc-output').innerHTML;
+                
+                output += '<div class="output-section"><h4>CRC Verification</h4>';
+                output += `<div class="output-item"><strong>Received Codeword:</strong> <span class="binary-display">${receivedCodeword.join('')}</span></div>`;
+                output += `<div class="output-item"><strong>Verification Remainder:</strong> <span class="binary-display">${verificationRemainder.join('')}</span></div>`;
+
+                if (hasError) {
+                    output += createErrorMessage('CRC verification failed - ERROR DETECTED in received data!');
+                } else {
+                    output += createSuccessMessage('CRC verification passed - NO ERROR detected in received data!');
+                }
+                
+                output += '</div>';
+
+                displayOutput('crc-output', output);
+
+            } catch (error) {
+                const currentOutput = document.getElementById('crc-output').innerHTML;
+                displayOutput('crc-output', currentOutput + createErrorMessage(error.message));
+            }
+        }
+    </script>
+</body>
+</html>
